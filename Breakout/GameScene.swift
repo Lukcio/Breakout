@@ -15,6 +15,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var paddle = SKSpriteNode()
     var brick = SKSpriteNode()
     var loseZone = SKSpriteNode()
+    let scoreLabel = SKLabelNode()
+    let outcomeLabel = SKLabelNode()
+    let resetLabel = SKLabelNode()
+    
+    var outcome = String()
+    var score = 0
     
     override func didMove(to view: SKView) {
         physicsWorld.contactDelegate = self
@@ -24,6 +30,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         makePaddle()
         makeBrick()
         makeLoseZone()
+        addScoreLabel(score: 0)
+        addResetLabel(alpha: 0.0)
         //////////////
         ball.physicsBody?.isDynamic = true
         ball.physicsBody?.applyImpulse(CGVector(dx: 3, dy: 5)) //dx - x magnitude, dy - y magnitude
@@ -102,6 +110,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let location = touch.location(in: self)
             paddle.position.x = location.x
         }
+        
+        let touch:UITouch = touches.first!
+        let positionInScene = touch.location(in: self)
+        let touchedNode = self.atPoint(positionInScene)
+        
+        if let name = touchedNode.name {
+            if name == "resetLabel" {
+                reset()
+            }
+        }
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -114,14 +132,74 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func didBegin(_ contact: SKPhysicsContact) {
         if contact.bodyA.node?.name == "brick" ||
             contact.bodyB.node?.name == "brick" {
-            print("You win!")
+            score += 1
+            print(score)
             brick.removeFromParent()
             ball.removeFromParent()
+            addOutcomeLabel(outcome: "You Win!")
+            scoreLabel.text = "Score: \(score)"
+            resetLabel.alpha = 1.0
+            score = 0
         }
         if contact.bodyA.node?.name == "loseZone" ||
             contact.bodyB.node?.name == "loseZone" {
             print("You lose!")
             ball.removeFromParent()
+            addOutcomeLabel(outcome: "You Lose!")
         }
-    } 
+    }
+    
+    func reset() {
+        for child in self.children {
+                child.removeFromParent()
+        }
+        addResetLabel(alpha: 0.0)
+        createBackground()
+        makeBall()
+        makePaddle()
+        makeBrick()
+        makeLoseZone()
+        removeFromParent()
+        addScoreLabel(score: 0)
+        
+        
+        ball.physicsBody?.isDynamic = true
+        ball.physicsBody?.applyImpulse(CGVector(dx: 3, dy: 5)) //dx - x magnitude, dy - y magnitude
+    }
+    
+    func addScoreLabel(score: Int) {
+        //scoreLabel = SKLabelNode()
+        scoreLabel.text = "Score: \(score)"
+        scoreLabel.name = "scoreLabel"
+        scoreLabel.fontSize = 30
+        scoreLabel.fontColor = .white
+        scoreLabel.position = CGPoint(x: frame.midX, y: frame.minY + 15)
+        
+        addChild(scoreLabel)
+    }
+    func addOutcomeLabel(outcome: String) {
+        let outcomeLabel = SKLabelNode()
+        outcomeLabel.text = outcome
+        outcomeLabel.fontSize = 30
+        outcomeLabel.fontColor = .white
+        outcomeLabel.position = CGPoint(x: frame.midX, y: frame.midY)
+        
+        addChild(outcomeLabel)
+    }
+    
+    func addResetLabel(alpha: CGFloat) {
+        //scoreLabel = SKLabelNode()
+        resetLabel.text = "Reset game"
+        resetLabel.name = "resetLabel"
+        resetLabel.fontSize = 30
+        resetLabel.alpha = alpha
+        resetLabel.fontColor = .white
+        resetLabel.position = CGPoint(x: frame.midX, y: frame.midY + 50)
+        
+        addChild(resetLabel)
+    }
+    
+    func createBlocks() {
+        
+    }
 }
