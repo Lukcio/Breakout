@@ -21,6 +21,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var outcome = String()
     var score = 0
+    var colorArray = [UIColor.red, UIColor.yellow, UIColor.green, UIColor.purple]
+    var bricksArray = [SKSpriteNode]()
     
     override func didMove(to view: SKView) {
         physicsWorld.contactDelegate = self
@@ -28,13 +30,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         createBackground()
         makeBall()
         makePaddle()
-        makeBrick()
+        createBlocks()
         makeLoseZone()
-        addScoreLabel(score: 0)
+        addScoreLabel(score: score)
         addResetLabel(alpha: 0.0)
         //////////////
         ball.physicsBody?.isDynamic = true
-        ball.physicsBody?.applyImpulse(CGVector(dx: 3, dy: 5)) //dx - x magnitude, dy - y magnitude
+        ball.physicsBody?.applyImpulse(CGVector(dx: 20, dy: 20)) //dx - x magnitude, dy - y magnitude
     }
     
     func createBackground() {
@@ -79,7 +81,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func makePaddle() {
-        paddle = SKSpriteNode(color: .white, size: CGSize(width: frame.width/4, height: 20))
+        paddle = SKSpriteNode(color: .white, size: CGSize(width: frame.width/*/4*/, height: 20))
         paddle.position = CGPoint(x: frame.midX, y: frame.minY + 125)//middle of screen on bottom
         paddle.name = "paddle"
         paddle.physicsBody = SKPhysicsBody(rectangleOf: paddle.size)
@@ -87,13 +89,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(paddle)
     }
     
-    func makeBrick() {
-        brick = SKSpriteNode(color: .blue, size: CGSize(width: 50, height: 20))
-        brick.position = CGPoint(x: frame.midX, y: frame.maxY - 30) // top middle of screen
-        brick.name = "brick"
+    func makeBrick(x: Int, y: Int, color: UIColor, name: String) {
+        brick = SKSpriteNode(color: color, size: CGSize(width: 50, height: 20))
+        brick.position = CGPoint(x: x, y: y) // top middle of screen
+        brick.name = name
         brick.physicsBody = SKPhysicsBody(rectangleOf: brick.size)
         brick.physicsBody?.isDynamic = false
         addChild(brick)
+//        brickX += 70
+//        if brickX > 250 {
+//            brickX = -290
+//            brickY -= 40
+//        }
     }
     
     func makeLoseZone() {
@@ -130,23 +137,48 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
-        if contact.bodyA.node?.name == "brick" ||
-            contact.bodyB.node?.name == "brick" {
-            score += 1
-            print(score)
-            brick.removeFromParent()
-            ball.removeFromParent()
-            addOutcomeLabel(outcome: "You Win!")
-            scoreLabel.text = "Score: \(score)"
-            resetLabel.alpha = 1.0
-            score = 0
-        }
-        if contact.bodyA.node?.name == "loseZone" ||
-            contact.bodyB.node?.name == "loseZone" {
-            print("You lose!")
-            ball.removeFromParent()
-            addOutcomeLabel(outcome: "You Lose!")
-        }
+        //for brick in bricksArray {
+            if contact.bodyA.node?.name == "brick" ||
+                contact.bodyB.node?.name == "brick" {
+                for brick in bricksArray {
+                    var brickIndex = bricksArray.index(of: brick)
+                    if brick == contact.bodyA.node || brick == contact.bodyA.node {
+                        score += 1
+                        scoreLabel.text = "Score: \(score)"
+                        
+                        if bricksArray.count >= 1 {
+                            bricksArray[brickIndex!].removeFromParent()
+                            bricksArray.remove(at: brickIndex!)
+                        }
+                        if score == 24 {
+                            ball.removeFromParent()
+                            addOutcomeLabel(outcome: "You Win!")
+                            scoreLabel.text = "Score: \(score)"
+                            resetLabel.alpha = 1.0
+                            score = 0
+                        }
+//                    score += 1
+//                    //print(score)
+//                    print(bricksArray.count)
+//                    bricksArray[brickIndex!].removeFromParent()
+    //                ball.removeFromParent()
+    //                addOutcomeLabel(outcome: "You Win!")
+    //                scoreLabel.text = "Score: \(score)"
+    //                resetLabel.alpha = 1.0
+    //                score = 0
+                }
+            }
+        //}
+            if contact.bodyA.node?.name == "loseZone" ||
+                contact.bodyB.node?.name == "loseZone" {
+                print("You lose!")
+                bricksArray.removeAll()
+                score = 0
+                ball.removeFromParent()
+                addOutcomeLabel(outcome: "You Lose!")
+                resetLabel.alpha = 1.0
+            }
+    }
     }
     
     func reset() {
@@ -157,7 +189,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         createBackground()
         makeBall()
         makePaddle()
-        makeBrick()
+        createBlocks()
         makeLoseZone()
         removeFromParent()
         addScoreLabel(score: 0)
@@ -200,6 +232,26 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func createBlocks() {
-        
+        var brickX = Int(frame.minX + 45)
+        var brickY = Int(frame.maxY - 30)
+        var colorIndex = 0
+        for i in 1...24 {
+            makeBrick(x: Int(brickX), y: Int(brickY), color: colorArray[colorIndex], name: "brick")
+            bricksArray.append(brick)
+            brickX += 65
+            if brickX >= Int(frame.maxX-30) {
+                colorIndex += 1
+                brickX = Int(frame.minX + 45)
+                brickY -= 33
+            }
+        }
+    }
+    
+    func showWin() {
+        ball.removeFromParent()
+        addOutcomeLabel(outcome: "You Win!")
+        scoreLabel.text = "Score: \(score)"
+        resetLabel.alpha = 1.0
+        score = 0
     }
 }
